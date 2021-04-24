@@ -75,4 +75,6 @@ func multi_http(reqJson *C.char, max int) *C.char {
 	return C.CString(string(resJson))
 }
 
-func main() {}
+func main() {
+	print("multi_http")
+}
