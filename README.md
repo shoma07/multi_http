@@ -7,7 +7,7 @@ Run multiple http requests asynchronously and wait until all results are receive
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'multi_http', git: 'https://github.com/shoma07/multi_http.git', branch: 'master'
+gem 'multi_http', git: 'https://github.com/shoma07/multi_http.git', branch: 'main'
 ```
 
 ## Usage
