@@ -5,11 +5,15 @@ require 'rspec/core/rake_task'
 
 RSpec::Core::RakeTask.new(:spec)
 
+task :go_build do
+  `go build -buildmode=c-shared -o lib/multi_http/multi_http.so src/lib.go`
+end
+
 task :cargo_build do
   `cargo build --release`
   `cp target/release/libmulti_http.dylib lib/multi_http/`
 end
 
-task build: :cargo_build
+task build: %i[go_build cargo_build]
 
 task default: %i[cargo_build spec]

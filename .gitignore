@@ -8,6 +8,8 @@
 /tmp/
 /target
 /lib/multi_http/libmulti_http.dylib
+/lib/multi_http/multi_http.h
+/lib/multi_http/multi_http.so
 
 # rspec failure tracking
 .rspec_status
