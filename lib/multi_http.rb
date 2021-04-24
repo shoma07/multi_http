@@ -12,21 +12,18 @@ require 'multi_http/response'
 module MultiHttp
   class Error < StandardError; end
 
-  REQUESTS = 'requests'
-  RESPONSES = 'responses'
-
   extend FFI::Library
 
-  ffi_lib 'lib/multi_http/libmulti_http.dylib'
-  attach_function :multi_http, %i[string], :string
+  ffi_lib File.expand_path('multi_http/multi_http.so', __dir__)
+  attach_function :multi_http, %i[string int], :string
   private_class_method :multi_http
 
   class << self
     # @param [Array<MultiHttp::Request>]
     # @return [Array<MultiHttp::Response>]
-    def call(requests)
-      JSON.parse(multi_http({ REQUESTS => requests.map(&:to_h) }.to_json))
-          .fetch(RESPONSES).map { |response| Response.new(**response.transform_keys(&:to_sym)) }
+    def call(requests, max = 10)
+      JSON.parse(multi_http(requests.map(&:to_h).to_json, max))
+          .map { |response| Response.new(status: response['status'], body: response['body']) }
     end
   end
 end
