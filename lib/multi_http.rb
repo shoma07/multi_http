@@ -13,15 +13,15 @@ module MultiHttp
   extend FFI::Library
 
   ffi_lib File.expand_path('multi_http/multi_http.so', __dir__)
-  attach_function :multi_http, %i[string int], :string
-  private_class_method :multi_http
+  attach_function :multihttp, %i[string int], :string
+  private_class_method :multihttp
 
   class << self
     # @param [Array<MultiHttp::Request>] requests
     # @param [Integer] max
     # @return [Array<MultiHttp::Response>]
     def call(requests, max = 10)
-      Response.build_list_by_json(multi_http(requests.map(&:to_h).to_json, max))
+      Response.build_list_by_json(multihttp(requests.map(&:to_h).to_json, max))
     end
   end
 end
