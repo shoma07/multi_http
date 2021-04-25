@@ -2,13 +2,13 @@ package main
 
 import (
 	"C"
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"sync"
 )
-import "bytes"
 
 type Request struct {
 	Method string `json:"method"`
@@ -31,11 +31,12 @@ func multi_http(reqJson *C.char, max int) *C.char {
 	var responses []Response
 	maxConnection := make(chan bool, max)
 	wg := &sync.WaitGroup{}
+	mutex := &sync.Mutex{}
 
 	for _, request := range requests {
 		wg.Add(1)
 		maxConnection <- true
-		go func() {
+		go func(request Request) {
 			defer wg.Done()
 
 			req, err := http.NewRequest(
@@ -61,10 +62,13 @@ func multi_http(reqJson *C.char, max int) *C.char {
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			mutex.Lock()
 			responses = append(responses, Response{Status: resp.StatusCode, Body: string(byteArray)})
+			mutex.Unlock()
 
 			<-maxConnection
-		}()
+		}(request)
 	}
 	wg.Wait()
 
