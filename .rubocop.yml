@@ -1,5 +1,8 @@
+require:
+  - rubocop-rake
+  - rubocop-rspec
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.5
   NewCops: enable
 Lint/DuplicateBranch:
   Enabled: true

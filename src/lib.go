@@ -2,13 +2,13 @@ package main
 
 import (
 	"C"
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"sync"
 )
-import "bytes"
 
 type Request struct {
 	Method string `json:"method"`
@@ -21,27 +21,29 @@ type Response struct {
 	Body   string `json:"body"`
 }
 
-//export multi_http
-func multi_http(reqJson *C.char, max int) *C.char {
+//export multihttp
+func multihttp(ch *C.char, max int) *C.char {
 	var requests []Request
-	if err := json.Unmarshal([]byte(C.GoString(reqJson)), &requests); err != nil {
+	if err := json.Unmarshal([]byte(C.GoString(ch)), &requests); err != nil {
 		log.Fatal(err)
 	}
 
-	var responses []Response
-	maxConnection := make(chan bool, max)
+	var resps []Response
+	conn := make(chan bool, max)
 	wg := &sync.WaitGroup{}
+	mutex := &sync.Mutex{}
 
 	for _, request := range requests {
 		wg.Add(1)
-		maxConnection <- true
-		go func() {
+		conn <- true
+
+		go func(r Request) {
 			defer wg.Done()
 
 			req, err := http.NewRequest(
-				request.Method,
-				request.URI,
-				bytes.NewBuffer([]byte(request.Body)),
+				r.Method,
+				r.URI,
+				bytes.NewBuffer([]byte(r.Body)),
 			)
 			if err != nil {
 				log.Fatal(err)
@@ -61,18 +63,23 @@ func multi_http(reqJson *C.char, max int) *C.char {
 			if err != nil {
 				log.Fatal(err)
 			}
-			responses = append(responses, Response{Status: resp.StatusCode, Body: string(byteArray)})
 
-			<-maxConnection
-		}()
+			mutex.Lock()
+			resps = append(resps, Response{Status: resp.StatusCode, Body: string(byteArray)})
+			mutex.Unlock()
+
+			<-conn
+		}(request)
 	}
+
 	wg.Wait()
 
-	resJson, err := json.Marshal(responses)
+	json, err := json.Marshal(resps)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return C.CString(string(resJson))
+
+	return C.CString(string(json))
 }
 
 func main() {}
